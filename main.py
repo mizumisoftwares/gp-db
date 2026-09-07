@@ -17,7 +17,9 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Tuple
 
 import duckdb
+import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # --- Hugging Face Repositories Configuration ---
@@ -35,9 +37,9 @@ IDX_PHONE = f"{INDEX_REPO_URL}/idx_phone.parquet"
 IDX_AADHAR = f"{INDEX_REPO_URL}/idx_aadhar.parquet"
 IDX_NAME = f"{INDEX_REPO_URL}/idx_name.parquet"
 
-# Performance Tuning
-PARALLELISM = int(os.environ.get("ICMR_PARALLEL", "15"))
-THREADS_PER_CONN = int(os.environ.get("ICMR_THREADS_PER_CONN", "8"))
+# Performance Tuning (Tuned for memory-constrained environments like Render Free Tier)
+PARALLELISM = int(os.environ.get("ICMR_PARALLEL", "4"))
+THREADS_PER_CONN = int(os.environ.get("ICMR_THREADS_PER_CONN", "2"))
 DUPLICATE_CAP = 2
 
 SEARCH_FIELDS = [
@@ -70,6 +72,9 @@ def _new_conn() -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()  # Pure in-memory
     con.execute("INSTALL parquet; LOAD parquet; INSTALL httpfs; LOAD httpfs;")
 
+    # Memory cap safeguard for cloud deployment
+    con.execute("SET memory_limit = '512MB';")
+
     # Authenticate via HF token if repos are private/gated
     hf_token = os.getenv("HF_TOKEN")
     if hf_token:
@@ -89,7 +94,6 @@ def _new_conn() -> duckdb.DuckDBPyConnection:
             con.execute(f"CREATE VIEW {view_name} AS SELECT * FROM read_parquet('{idx_url}')")
             _INDEX_STATUS[key] = True
         except Exception:
-            # Fall back to raw scans if index file is absent or incomplete
             _INDEX_STATUS[key] = False
 
     con.execute(f"SET threads = {THREADS_PER_CONN}")
@@ -115,9 +119,7 @@ def _get_conn() -> duckdb.DuckDBPyConnection:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # App startup
     yield
-    # App shutdown: Clean up connections and thread pool
     pool.shutdown(wait=True)
     with _conns_lock:
         for con in _conns:
@@ -132,6 +134,15 @@ app = FastAPI(
     description="Data is fully trained on gram panchayat database of public datasets.",
     version="2.0.0",
     lifespan=lifespan,
+)
+
+# Enable CORS for cross-origin browser requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -158,10 +169,11 @@ def _cap_duplicates(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return out
 
 
-def _source_clause(source: Optional[str]) -> str:
+def _source_clause(source: Optional[str], params: List[Any]) -> str:
     if source and source in ("icmr", "hitek", "inddata"):
         src = "hitek" if source == "hitek" else source
-        return f" AND source = '{src}'"
+        params.append(src)
+        return " AND source = ?"
     return ""
 
 
@@ -175,8 +187,8 @@ def _run_field_search(
     if field not in SEARCH_FIELDS:
         raise ValueError(f"Unknown field: {field}")
 
-    v = value.replace("'", "''")
     view = "people"
+    params: List[Any] = []
 
     # Index Routing for performance optimization
     if mode == "exact":
@@ -187,24 +199,26 @@ def _run_field_search(
         elif field == "name" and _INDEX_STATUS["name"]:
             view = "people_name"
 
+        params.append(value)
         sql = (
-            f"SELECT * FROM {view} WHERE {field} = '{v}'"
-            f"{_source_clause(source)} LIMIT {limit * DUPLICATE_CAP + 20}"
+            f"SELECT * FROM {view} WHERE {field} = ?"
+            f"{_source_clause(source, params)} LIMIT {limit * DUPLICATE_CAP + 20}"
         )
     elif mode == "contains":
         if field == "name" and _INDEX_STATUS["name"]:
             view = "people_name"
 
-        v2 = v.replace("%", r"\%").replace("_", r"\_")
+        v_escaped = value.replace("%", r"\%").replace("_", r"\_")
+        params.append(f"%{v_escaped}%")
         sql = (
-            f"SELECT * FROM {view} WHERE {field} ILIKE '%{v2}%' ESCAPE '\\'"
-            f"{_source_clause(source)} LIMIT {limit * DUPLICATE_CAP + 20}"
+            f"SELECT * FROM {view} WHERE {field} ILIKE ? ESCAPE '\\'"
+            f"{_source_clause(source, params)} LIMIT {limit * DUPLICATE_CAP + 20}"
         )
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
     con = _get_conn()
-    rows = con.execute(sql).fetchall()
+    rows = con.execute(sql, params).fetchall()
     cols = [d[0] for d in con.description]
     results = _cap_duplicates([dict(zip(cols, r)) for r in rows])[:limit]
 
@@ -387,3 +401,8 @@ async def search_parallel(req: BatchRequest):
         {"searches": len(req.queries), "parallelism": PARALLELISM, "results": results},
         True,
     )
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)

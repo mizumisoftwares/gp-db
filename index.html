@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GP Search Engine UI</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #e2e8f0;
+      --code-bg: #0f172a;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 1.6rem;
+    }
+
+    .subtitle {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .api-config {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+      background: #f1f5f9;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .api-config input {
+      flex: 1;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      padding: 10px 16px;
+      border: none;
+      background: none;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    input, select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    button.btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .batch-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr 120px 40px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .status-badge {
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .status-200 { background: #dcfce7; color: #15803d; }
+    .status-502 { background: #fee2e2; color: #b91c1c; }
+
+    .results-container {
+      background: var(--code-bg);
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      max-height: 500px;
+    }
+
+    pre {
+      margin: 0;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>GP Search Engine 2.0.0</h1>
+    <div class="subtitle">Data trained on Gram Panchayat public datasets</div>
+  </header>
+
+  <!-- Endpoint Base URL Config -->
+  <div class="api-config">
+    <label for="baseUrl">Base URL:</label>
+    <input type="text" id="baseUrl" value="https://gp-work.onrender.com">
+    <button class="btn" onclick="checkHealth()">Test /health</button>
+  </div>
+
+  <!-- Navigation -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('single')">GET /search</button>
+    <button class="tab-btn" onclick="switchTab('parallel')">POST /search/parallel</button>
+  </div>
+
+  <!-- GET /search -->
+  <div id="singleSearch" class="card">
+    <form onsubmit="handleSingleSearch(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="sq">Search Query (q) *</label>
+          <input type="text" id="sq" placeholder="e.g., milkopur" required>
+        </div>
+        <div class="form-group">
+          <label for="sfield">Restrict Field</label>
+          <select id="sfield">
+            <option value="">Any</option>
+            <option value="name">name</option>
+            <option value="fathersName">fathersName</option>
+            <option value="phoneNumber">phoneNumber</option>
+            <option value="aadharNumber">aadharNumber</option>
+            <option value="otherNumber">otherNumber</option>
+            <option value="address">address</option>
+            <option value="district">district</option>
+            <option value="pincode">pincode</option>
+            <option value="state">state</option>
+            <option value="town">town</option>
+            <option value="source">source</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="smode">Mode</label>
+          <select id="smode">
+            <option value="contains">contains</option>
+            <option value="exact">exact</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="slimit">Limit (1 - 1000)</label>
+          <input type="number" id="slimit" value="10" min="1" max="1000">
+        </div>
+        <div class="form-group">
+          <label for="ssource">Source Filter</label>
+          <select id="ssource">
+            <option value="">Any</option>
+            <option value="icmr">icmr</option>
+            <option value="hitek">hitek</option>
+            <option value="inddata">inddata</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="spretty">Pretty Print</label>
+          <select id="spretty">
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn">Execute Search</button>
+    </form>
+  </div>
+
+  <!-- POST /search/parallel -->
+  <div id="parallelSearch" class="card hidden">
+    <form onsubmit="handleParallelSearch(event)">
+      <p style="font-size:0.85rem; color:#64748b; margin-top:0;">Runs up to 50 concurrent queries across DuckDB connection workers.</p>
+      
+      <div id="batchContainer"></div>
+
+      <div style="margin-bottom: 16px;">
+        <button type="button" class="btn" style="background:#64748b;" onclick="addBatchRow()">+ Add Query Item</button>
+      </div>
+
+      <div class="form-group" style="max-width:200px; margin-bottom:16px;">
+        <label for="plimit">Global Limit</label>
+        <input type="number" id="plimit" value="10" min="1" max="100">
+      </div>
+
+      <button type="submit" class="btn">Execute Parallel Search</button>
+    </form>
+  </div>
+
+  <!-- Response Viewer -->
+  <div class="card">
+    <div id="statusBadge"></div>
+    <div class="results-container">
+      <pre id="output">// Results will appear here...</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (tab === 'single') {
+      document.getElementById('singleSearch').classList.remove('hidden');
+      document.getElementById('parallelSearch').classList.add('hidden');
+      event.target.classList.add('active');
+    } else {
+      document.getElementById('singleSearch').classList.add('hidden');
+      document.getElementById('parallelSearch').classList.remove('hidden');
+      event.target.classList.add('active');
+      if (document.getElementById('batchContainer').children.length === 0) {
+        addBatchRow();
+      }
+    }
+  }
+
+  function getBaseUrl() {
+    return document.getElementById('baseUrl').value.replace(/\/$/, '');
+  }
+
+  function updateStatus(code, text) {
+    const badge = document.getElementById('statusBadge');
+    if (!code) {
+      badge.innerHTML = '';
+      return;
+    }
+    const isOk = code >= 200 && code < 300;
+    badge.innerHTML = `<span class="status-badge ${isOk ? 'status-200' : 'status-502'}">Status: ${code} ${text}</span>`;
+  }
+
+  async function checkHealth() {
+    const out = document.getElementById('output');
+    out.textContent = "Loading...";
+    updateStatus(null);
+
+    try {
+      const res = await fetch(`${getBaseUrl()}/health`);
+      updateStatus(res.status, res.statusText);
+      const data = await res.json();
+      out.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      out.textContent = `Network Error: ${err.message}`;
+    }
+  }
+
+  async function handleSingleSearch(e) {
+    e.preventDefault();
+    const out = document.getElementById('output');
+    out.textContent = "Loading query...";
+    updateStatus(null);
+
+    const params = new URLSearchParams();
+    params.append('q', document.getElementById('sq').value);
+
+    const field = document.getElementById('sfield').value;
+    if (field) params.append('field', field);
+
+    params.append('mode', document.getElementById('smode').value);
+    params.append('limit', document.getElementById('slimit').value);
+
+    const source = document.getElementById('ssource').value;
+    if (source) params.append('source', source);
+
+    params.append('pretty', document.getElementById('spretty').value);
+
+    try {
+      const res = await fetch(`${getBaseUrl()}/search?${params.toString()}`);
+      updateStatus(res.status, res.statusText);
+      
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        out.textContent = JSON.stringify(json, null, 2);
+      } catch {
+        out.textContent = text || "(Empty response body)";
+      }
+    } catch (err) {
+      out.textContent = `Network Error: ${err.message}`;
+    }
+  }
+
+  function addBatchRow() {
+    const container = document.getElementById('batchContainer');
+    const row = document.createElement('div');
+    row.className = 'batch-item';
+    row.innerHTML = `
+      <input type="text" placeholder="Value (Required)" class="batch-value" required>
+      <select class="batch-field">
+        <option value="name">name</option>
+        <option value="fathersName">fathersName</option>
+        <option value="phoneNumber">phoneNumber</option>
+        <option value="address">address</option>
+        <option value="district">district</option>
+        <option value="pincode">pincode</option>
+      </select>
+      <select class="batch-mode">
+        <option value="contains">contains</option>
+        <option value="exact">exact</option>
+      </select>
+      <button type="button" class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(row);
+  }
+
+  async function handleParallelSearch(e) {
+    e.preventDefault();
+    const out = document.getElementById('output');
+    out.textContent = "Loading parallel queries...";
+    updateStatus(null);
+
+    const rows = document.querySelectorAll('.batch-item');
+    const queries = Array.from(rows).map(row => ({
+      value: row.querySelector('.batch-value').value,
+      field: row.querySelector('.batch-field').value,
+      mode: row.querySelector('.batch-mode').value,
+      limit: 10
+    }));
+
+    const body = {
+      queries: queries,
+      limit: parseInt(document.getElementById('plimit').value, 10) || 10
+    };
+
+    try {
+      const res = await fetch(`${getBaseUrl()}/search/parallel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      
+      updateStatus(res.status, res.statusText);
+      const text = await res.text();
+      
+      try {
+        const json = JSON.parse(text);
+        out.textContent = JSON.stringify(json, null, 2);
+      } catch {
+        out.textContent = text || "(Empty response body)";
+      }
+    } catch (err) {
+      out.textContent = `Network Error: ${err.message}`;
+    }
+  }
+</script>
+
+</body>
+</html>
