@@ -200,7 +200,15 @@ def _unified_search(q: str, limit: int = 10) -> dict:
         return {"query": q, "searched_fields": [], "count": 0, "results": []}
 
 # ── FastAPI (API Endpoints) ─────────────────────────────────────────────────
-fastapi_app = FastAPI(title="ICMR + HITEK Search API", version="2.0")
+fastapi_app = FastAPI(title="GP Db Search API", version="2.0")
+
+fastapi_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class QueryItem(BaseModel):
