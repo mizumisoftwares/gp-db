@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 import duckdb
 from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi.middleware.cors import CORSMiddleware
 import gradio as gr
 from pydantic import BaseModel, Field
 
@@ -200,6 +201,8 @@ def _unified_search(q: str, limit: int = 10) -> dict:
         return {"query": q, "searched_fields": [], "count": 0, "results": []}
 
 # ── FastAPI (API Endpoints) ─────────────────────────────────────────────────
+fastapi_app = FastAPI(title="GP Db Search API", version="2.0")
+
 fastapi_app = FastAPI(title="GP Db Search API", version="2.0")
 
 fastapi_app.add_middleware(
