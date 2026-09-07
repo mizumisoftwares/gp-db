@@ -3,298 +3,370 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ICMR + HITEK Search Console</title>
+  <title>GP dp - Data of Villagers by Panchayat Sahayak of UP</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome for Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(1.1); opacity: 0.35; }
+    }
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+    .animate-glow { animation: pulseGlow 8s infinite ease-in-out; }
+    .animate-float { animation: floatCard 4s infinite ease-in-out; }
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans relative overflow-x-hidden select-none" oncontextmenu="return false;">
 
-  <!-- Navigation Bar -->
-  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-magnifying-glass-chart text-indigo-400 text-2xl"></i>
-        <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          ICMR + HITEK Search
-        </h1>
+  <!-- Ambient Glow Background Animations -->
+  <div class="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/30 rounded-full filter blur-[120px] pointer-events-none animate-glow"></div>
+  <div class="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-cyan-600/20 rounded-full filter blur-[120px] pointer-events-none animate-glow" style="animation-delay: 4s;"></div>
+
+  <!-- PASSWORD MODAL (Locked State) -->
+  <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md px-4">
+    <div class="glass-panel border border-slate-700/80 p-8 rounded-2xl max-w-md w-full shadow-2xl animate-float">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 mb-4 text-2xl">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-cyan-300 to-teal-200 bg-clip-text text-transparent">GP dp Access Portal</h2>
+        <p class="text-xs text-slate-400 mt-2">Data of villagers by Panchayat Sahayak of UP</p>
       </div>
-      <div id="api-status-badge" class="flex items-center space-x-2 text-xs bg-slate-700 px-3 py-1.5 rounded-full border border-slate-600">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></span>
-        <span id="status-text" class="text-slate-300">Checking API...</span>
+
+      <form id="auth-form" class="space-y-4" onsubmit="event.preventDefault(); _0xauth();">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-2">Security Key Required</label>
+          <input 
+            type="password" 
+            id="pass-key" 
+            placeholder="Enter authorization password..." 
+            required 
+            class="w-full px-4 py-3 bg-slate-900/90 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 text-center tracking-widest transition"
+          />
+        </div>
+        <button 
+          type="submit" 
+          class="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition duration-300 transform active:scale-95"
+        >
+          Unlock System Access
+        </button>
+        <p id="auth-err" class="text-xs text-rose-400 text-center hidden font-medium">Access Denied: Invalid Security Key</p>
+      </form>
+      <div class="mt-6 pt-4 border-t border-slate-800 text-center text-[10px] text-slate-500">
+        Developed by Sarvesh Kumar &bull; GP dp
       </div>
     </div>
-  </header>
+  </div>
 
-  <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
-
-    <!-- Search Box Panel -->
-    <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl mb-8">
-      <form id="search-form" class="space-y-4">
-        
-        <!-- Input row -->
-        <div class="flex flex-col md:flex-row gap-4">
-          <div class="relative flex-grow">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-search"></i>
-            </div>
-            <input 
-              type="text" 
-              id="query-input" 
-              placeholder="Enter Mobile Number (e.g., 8115749248)..." 
-              required
-              class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-100 placeholder-slate-500 transition"
-            />
+  <!-- MAIN APPLICATION UI (Unlocked State) -->
+  <div id="main-app" class="hidden flex-col min-h-screen z-10">
+    
+    <!-- Navigation Header -->
+    <header class="glass-panel border-b border-slate-800 sticky top-0 z-40">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 font-black text-lg">
+            GP
           </div>
-          <button 
-            type="submit" 
-            id="search-btn"
-            class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-8 py-3 rounded-lg transition duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/30"
-          >
-            <span>Search</span>
-            <i class="fa-solid fa-arrow-right"></i>
+          <div>
+            <h1 class="text-xl font-extrabold bg-gradient-to-r from-indigo-400 via-cyan-300 to-teal-200 bg-clip-text text-transparent">
+              GP dp
+            </h1>
+            <p class="text-[11px] text-slate-400">Data of villagers by Panchayat Sahayak of UP</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2 text-xs bg-slate-900/80 px-3 py-1.5 rounded-full border border-slate-700/60 shadow-inner">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></span>
+            <span id="status-text" class="text-slate-300 font-medium">Connecting...</span>
+          </div>
+          <button onclick="_0xlogout()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700 transition">
+            <i class="fa-solid fa-power-off text-rose-400"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+
+      <!-- Search Panel -->
+      <div class="glass-panel rounded-2xl p-6 border border-slate-800 shadow-2xl mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full filter blur-2xl pointer-events-none"></div>
+
+        <form id="search-form" class="space-y-4">
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="relative flex-grow">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-indigo-400">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
+              <input 
+                type="text" 
+                id="query-input" 
+                placeholder="Enter Village Mobile Number (e.g., 8115749248)..." 
+                required
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-900/90 border border-slate-700/80 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 text-slate-100 placeholder-slate-500 transition font-medium"
+              />
+            </div>
+            <button 
+              type="submit" 
+              id="search-btn"
+              class="bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-600 hover:opacity-90 text-white font-semibold px-8 py-3.5 rounded-xl transition duration-300 flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/25 active:scale-95"
+            >
+              <span>Search Record</span>
+              <i class="fa-solid fa-arrow-right-long"></i>
+            </button>
+          </div>
+
+          <!-- Controls -->
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-slate-800 text-xs text-slate-400">
+            <div class="flex items-center space-x-4">
+              <label class="flex items-center space-x-2">
+                <span>Search Mode:</span>
+                <select id="mode-select" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
+                  <option value="exact">Exact Match</option>
+                  <option value="contains" selected>Contains</option>
+                </select>
+              </label>
+
+              <label class="flex items-center space-x-2">
+                <span>Result Limit:</span>
+                <select id="limit-select" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
+                  <option value="5">5</option>
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="flex items-center space-x-2 text-emerald-400 font-medium">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>UP Panchayat Data Verification Active</span>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Results Display Container -->
+      <div id="results-container" class="space-y-6 hidden">
+        <div class="flex flex-wrap justify-between items-center glass-panel px-5 py-3.5 rounded-xl border border-slate-800">
+          <div class="text-sm">
+            Found <span id="res-count" class="font-extrabold text-indigo-400">0</span> record(s) for query: 
+            <code id="res-query" class="bg-slate-900 px-2 py-0.5 rounded text-amber-300 font-mono text-xs border border-slate-700"></code>
+          </div>
+          <button id="toggle-json-btn" class="text-xs text-slate-400 hover:text-indigo-300 underline transition">
+            Toggle Raw Payload
           </button>
         </div>
 
-        <!-- Controls Row -->
-        <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-700/50 text-xs text-slate-400">
-          <div class="flex items-center space-x-4">
-            <label class="flex items-center space-x-1.5 cursor-pointer">
-              <span>Mode:</span>
-              <select id="mode-select" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none">
-                <option value="exact">Exact Match</option>
-                <option value="contains" selected>Contains</option>
-              </select>
-            </label>
-
-            <label class="flex items-center space-x-1.5 cursor-pointer">
-              <span>Limit:</span>
-              <select id="limit-select" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="flex items-center space-x-2">
-            <span class="text-emerald-400"><i class="fa-solid fa-shield-halved"></i> Sensitive Identifiers Redacted</span>
-          </div>
+        <div id="raw-json-wrapper" class="hidden">
+          <pre id="raw-json-output" class="bg-slate-950 p-4 rounded-xl text-xs font-mono text-emerald-400 overflow-x-auto border border-slate-800 max-h-96 shadow-inner"></pre>
         </div>
 
-      </form>
-    </div>
+        <div id="cards-grid" class="grid grid-cols-1 gap-4"></div>
+      </div>
 
-    <!-- Results Section -->
-    <div id="results-container" class="space-y-6 hidden">
-      
-      <!-- Stats Header -->
-      <div class="flex flex-wrap justify-between items-center bg-slate-800/50 px-4 py-3 rounded-lg border border-slate-700/50">
-        <div class="text-sm">
-          Found <span id="res-count" class="font-bold text-indigo-400">0</span> results for query: 
-          <code id="res-query" class="bg-slate-900 px-2 py-0.5 rounded text-amber-300 font-mono"></code>
+      <!-- Empty State -->
+      <div id="empty-state" class="text-center py-20 glass-panel rounded-2xl border border-dashed border-slate-800 animate-float">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-900 flex items-center justify-center text-slate-600 text-2xl border border-slate-800">
+          <i class="fa-solid fa-users-viewfinder"></i>
         </div>
-        <button id="toggle-json-btn" class="text-xs text-slate-400 hover:text-slate-200 underline">
-          View Raw JSON Response
-        </button>
+        <h3 class="text-lg font-bold text-slate-300">Panchayat Sahayak Record Portal</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+          Enter a mobile number to query village database entries across Uttar Pradesh.
+        </p>
       </div>
 
-      <!-- Raw JSON Display (Hidden by default) -->
-      <div id="raw-json-wrapper" class="hidden">
-        <pre id="raw-json-output" class="bg-slate-950 p-4 rounded-lg text-xs font-mono text-emerald-400 overflow-x-auto border border-slate-800 max-h-96"></pre>
+      <!-- Loading State -->
+      <div id="loading-state" class="hidden text-center py-20">
+        <div class="relative inline-flex">
+          <div class="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+        </div>
+        <p class="text-xs font-semibold text-slate-400 mt-4 tracking-wider uppercase">Querying Panchayat Records...</p>
       </div>
 
-      <!-- Result Cards Container -->
-      <div id="cards-grid" class="grid grid-cols-1 gap-4"></div>
+    </main>
 
-    </div>
+    <!-- Footer -->
+    <footer class="glass-panel border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+      <span>GP dp &bull; Data of villagers by Panchayat Sahayak of UP &bull; <strong>Developed by Sarvesh Kumar</strong></span>
+    </footer>
 
-    <!-- Empty / Initial State -->
-    <div id="empty-state" class="text-center py-16 bg-slate-800/30 rounded-xl border border-dashed border-slate-700">
-      <i class="fa-solid fa-database text-4xl text-slate-600 mb-3"></i>
-      <h3 class="text-base font-semibold text-slate-400">Query 2.5 Billion Index Records</h3>
-      <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-        Search mobile numbers via remote parquet index querying.
-      </p>
-    </div>
+  </div>
 
-    <!-- Loading Spinner State -->
-    <div id="loading-state" class="hidden text-center py-16">
-      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
-      <p class="text-sm text-slate-400 mt-4">Querying remote index dataset...</p>
-    </div>
+  <!-- SCRAMBLED & OBFUSCATED FRONTEND LOGIC -->
+  <script type="text/javascript">
+    /* Anti-Inspection Shield */
+    document.addEventListener('keydown', function(e) {
+      if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) || (e.ctrlKey && e.keyCode == 85)) {
+        e.preventDefault();
+        return false;
+      }
+    });
 
-  </main>
+    /* Scrambled Execution Kernel */
+    var _0x5a1a = ["\x67\x70\x2d\x77\x6f\x72\x6b\x2e\x6f\x6e\x72\x65\x6e\x64\x65\x72\x2e\x63\x6f\x6d", "\x6d\x79\x66\x61\x6e\x69\x73\x6f\x66\x66\x73\x61\x72\x76\x65\x73\x68", "\x67\x70\x5f\x64\x70\x5f\x73\x65\x73\x73\x69\x6f\x6e\x5f\x61\x75\x74\x68", "\x67\x72\x69\x64", "\x68\x69\x64\x64\x65\x6e", "\x66\x6c\x65\x78"];
+    const _0xBASE = "https://" + _0x5a1a[0];
+    const _0xPASS = _0x5a1a[1];
+    const _0xSKEY = _0x5a1a[2];
 
-  <!-- Footer -->
-  <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-500">
-    <span>ICMR + HITEK Remote Index Console &bull; Connected to Render API</span>
-  </footer>
-
-  <!-- Frontend Logic -->
-  <script>
-    const API_BASE = "https://gp-work.onrender.com";
-
-    // DOM Elements
-    const statusDot = document.getElementById("status-dot");
-    const statusText = document.getElementById("status-text");
-    const searchForm = document.getElementById("search-form");
-    const queryInput = document.getElementById("query-input");
-    const modeSelect = document.getElementById("mode-select");
-    const limitSelect = document.getElementById("limit-select");
-    const resultsContainer = document.getElementById("results-container");
-    const emptyState = document.getElementById("empty-state");
-    const loadingState = document.getElementById("loading-state");
-    const resCount = document.getElementById("res-count");
-    const resQuery = document.getElementById("res-query");
-    const cardsGrid = document.getElementById("cards-grid");
-    const rawJsonWrapper = document.getElementById("raw-json-wrapper");
-    const rawJsonOutput = document.getElementById("raw-json-output");
-    const toggleJsonBtn = document.getElementById("toggle-json-btn");
-
-    // Check API Health on load
-    async function checkHealth() {
-      try {
-        const res = await fetch(`${API_BASE}/health`);
-        const data = await res.json();
-        if (data.status === "ok") {
-          statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
-          statusText.textContent = "API Operational";
-        } else {
-          throw new Error();
-        }
-      } catch (err) {
-        statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
-        statusText.textContent = "API Offline / Error";
+    function _0xauth() {
+      const p = document.getElementById("pass-key").value;
+      if (p === _0xPASS) {
+        localStorage.setItem(_0xSKEY, "true");
+        _0xinit();
+      } else {
+        document.getElementById("auth-err").classList.remove("hidden");
       }
     }
-    checkHealth();
 
-    // Toggle Raw JSON
-    toggleJsonBtn.addEventListener("click", () => {
-      rawJsonWrapper.classList.toggle("hidden");
-    });
+    function _0xlogout() {
+      localStorage.removeItem(_0xSKEY);
+      location.reload();
+    }
 
-    // Handle Search Submission
-    searchForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const query = queryInput.value.trim();
-      if (!query) return;
+    function _0xinit() {
+      if (localStorage.getItem(_0xSKEY) === "true") {
+        document.getElementById("auth-overlay").classList.add("hidden");
+        const m = document.getElementById("main-app");
+        m.classList.remove("hidden");
+        m.classList.add(_0x5a1a[5]);
+        _0xcheck();
+      }
+    }
 
-      const mode = modeSelect.value;
-      const limit = limitSelect.value;
-
-      // Show Loading State
-      emptyState.classList.add("hidden");
-      resultsContainer.classList.add("hidden");
-      loadingState.classList.remove("hidden");
-
+    async function _0xcheck() {
+      const sd = document.getElementById("status-dot");
+      const st = document.getElementById("status-text");
       try {
-        const url = `${API_BASE}/search?mobile=${encodeURIComponent(query)}&mode=${mode}&limit=${limit}&pretty=true`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const r = await fetch(`${_0xBASE}/health`);
+        const d = await r.json();
+        if (d.status === "ok") {
+          sd.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50";
+          st.textContent = "Panchayat System Online";
+        } else { throw new Error(); }
+      } catch (e) {
+        sd.className = "w-2 h-2 rounded-full bg-rose-500";
+        st.textContent = "System Disconnected";
+      }
+    }
 
-        loadingState.classList.add("hidden");
-        resultsContainer.classList.remove("hidden");
+    window.addEventListener("DOMContentLoaded", () => {
+      _0xinit();
 
-        // Render Overview Stats
-        resCount.textContent = data.total || 0;
-        resQuery.textContent = query;
-        rawJsonOutput.textContent = JSON.stringify(data, null, 2);
+      const sf = document.getElementById("search-form");
+      const qi = document.getElementById("query-input");
+      const ms = document.getElementById("mode-select");
+      const ls = document.getElementById("limit-select");
+      const rc = document.getElementById("results-container");
+      const es = document.getElementById("empty-state");
+      const ls_elem = document.getElementById("loading-state");
+      const r_cnt = document.getElementById("res-count");
+      const r_qry = document.getElementById("res-query");
+      const cg = document.getElementById("cards-grid");
+      const raw_wrap = document.getElementById("raw-json-wrapper");
+      const raw_out = document.getElementById("raw-json-output");
+      const tj_btn = document.getElementById("toggle-json-btn");
 
-        // Render Cards
-        cardsGrid.innerHTML = "";
-        if (data.results && data.results.length > 0) {
-          data.results.forEach((record, index) => {
-            cardsGrid.appendChild(createRecordCard(record, index + 1));
-          });
-        } else {
-          cardsGrid.innerHTML = `
-            <div class="bg-slate-800 p-6 rounded-lg text-center text-slate-400">
-              <i class="fa-solid fa-circle-xmark text-slate-500 text-3xl mb-2"></i>
-              <p>No matching records found in database indexes.</p>
-            </div>
-          `;
+      tj_btn.addEventListener("click", () => raw_wrap.classList.toggle("hidden"));
+
+      sf.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const q = qi.value.trim();
+        if (!q) return;
+
+        es.classList.add("hidden");
+        rc.classList.add("hidden");
+        ls_elem.classList.remove("hidden");
+
+        try {
+          const u = `${_0xBASE}/search?mobile=${encodeURIComponent(q)}&mode=${ms.value}&limit=${ls.value}&pretty=true`;
+          const res = await fetch(u);
+          const data = await res.json();
+
+          ls_elem.classList.add("hidden");
+          rc.classList.remove("hidden");
+
+          r_cnt.textContent = data.total || 0;
+          r_qry.textContent = q;
+          raw_out.textContent = JSON.stringify(data, null, 2);
+
+          cg.innerHTML = "";
+          if (data.results && data.results.length > 0) {
+            data.results.forEach((rec, idx) => {
+              cg.appendChild(_0xcard(rec, idx + 1));
+            });
+          } else {
+            cg.innerHTML = `
+              <div class="glass-panel p-8 rounded-xl text-center text-slate-400 border border-slate-800">
+                <i class="fa-solid fa-folder-open text-3xl text-slate-600 mb-2"></i>
+                <p class="text-sm font-semibold">No villager record matched this query in GP database.</p>
+              </div>
+            `;
+          }
+        } catch (err) {
+          ls_elem.classList.add("hidden");
+          es.classList.remove("hidden");
+          alert("Error retrieving database payload.");
+        }
+      });
+
+      function _0xcard(r, n) {
+        const c = document.createElement("div");
+        c.className = "glass-panel border border-slate-800 rounded-xl p-5 shadow-xl hover:border-indigo-500/40 transition duration-300";
+
+        let conn = "";
+        if (r.connected_numbers && r.connected_numbers.length > 0) {
+          const b = r.connected_numbers.map(x => `
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
+              ${x.field}: ${x.value}
+            </span>
+          `).join("");
+          conn = `<div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap gap-2 items-center">
+            <span class="text-[11px] text-slate-400 font-semibold">Linked Contacts:</span>${b}
+          </div>`;
         }
 
-      } catch (err) {
-        loadingState.classList.add("hidden");
-        emptyState.classList.remove("hidden");
-        alert("Failed to execute search query. Please verify connection to server.");
-      }
-    });
-
-    // Render HTML Card for Record
-    function createRecordCard(row, num) {
-      const card = document.createElement("div");
-      card.className = "bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-md hover:border-slate-600 transition";
-
-      // Connected Numbers List
-      let connectedHTML = "";
-      if (row.connected_numbers && row.connected_numbers.length > 0) {
-        const badges = row.connected_numbers.map(c => `
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">
-            ${c.field}: ${c.value}
-          </span>
-        `).join("");
-        connectedHTML = `<div class="mt-3 pt-3 border-t border-slate-700/60 flex flex-wrap gap-2 items-center">
-          <span class="text-xs text-slate-400 font-semibold">Connected:</span>
-          ${badges}
-        </div>`;
-      }
-
-      card.innerHTML = `
-        <div class="flex justify-between items-start mb-3">
-          <div class="flex items-center space-x-2">
-            <span class="bg-slate-700 text-slate-300 text-xs font-bold px-2.5 py-1 rounded-md">#${num}</span>
-            <h4 class="font-bold text-lg text-slate-100">${row.name || 'N/A'}</h4>
-          </div>
-          <span class="text-xs bg-slate-900 text-slate-400 px-2 py-1 rounded border border-slate-700 font-mono">
-            Source: ${row.source || 'Unknown'}
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-          <div>
-            <span class="text-slate-500 block">Father's Name</span>
-            <span class="text-slate-200 font-medium">${row.fathersName || '—'}</span>
-          </div>
-          <div>
-            <span class="text-slate-500 block">Phone Number</span>
-            <span class="text-slate-200 font-medium">${row.phoneNumber || '—'}</span>
-          </div>
-          <div>
-            <span class="text-slate-500 block">Aadhaar Number</span>
-            <span class="text-amber-400 font-medium">${row.aadharNumber || '[Redacted]'}</span>
-          </div>
-          <div>
-            <span class="text-slate-500 block">Other Number</span>
-            <span class="text-slate-200 font-medium">${row.otherNumber || '—'}</span>
-          </div>
-          <div>
-            <span class="text-slate-500 block">Location</span>
-            <span class="text-slate-200 font-medium">
-              ${[row.town, row.district, row.state].filter(Boolean).join(', ') || '—'}
+        c.innerHTML = `
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex items-center space-x-2">
+              <span class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 text-xs font-bold px-2.5 py-1 rounded-lg">#${n}</span>
+              <h4 class="font-bold text-lg text-slate-100">${r.name || 'Name Not Recorded'}</h4>
+            </div>
+            <span class="text-[10px] bg-slate-900 text-slate-400 px-2 py-1 rounded-md border border-slate-800 font-mono">
+              Source: ${r.source || 'UP_Panchayat'}
             </span>
           </div>
-          <div>
-            <span class="text-slate-500 block">Pincode</span>
-            <span class="text-slate-200 font-medium">${row.pincode || '—'}</span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div><span class="text-slate-500 block">Father's Name</span><span class="text-slate-200 font-medium">${r.fathersName || '—'}</span></div>
+            <div><span class="text-slate-500 block">Phone Number</span><span class="text-slate-200 font-medium font-mono">${r.phoneNumber || '—'}</span></div>
+            <div><span class="text-slate-500 block">Aadhaar Record</span><span class="text-amber-400 font-medium">${r.aadharNumber || '[Aadhaar Redacted]'}</span></div>
+            <div><span class="text-slate-500 block">Alternate Contact</span><span class="text-slate-200 font-medium font-mono">${r.otherNumber || '—'}</span></div>
+            <div><span class="text-slate-500 block">Town / District / State</span><span class="text-slate-200 font-medium">${[r.town, r.district, r.state].filter(Boolean).join(', ') || '—'}</span></div>
+            <div><span class="text-slate-500 block">Pincode</span><span class="text-slate-200 font-medium font-mono">${r.pincode || '—'}</span></div>
           </div>
-        </div>
 
-        <div class="mt-3 text-xs">
-          <span class="text-slate-500 block">Address</span>
-          <span class="text-slate-300">${row.address || '—'}</span>
-        </div>
-
-        ${connectedHTML}
-      `;
-
-      return card;
-    }
+          <div class="mt-3 text-xs bg-slate-900/50 p-2.5 rounded-lg border border-slate-800/80">
+            <span class="text-slate-500 block font-semibold text-[10px] uppercase">Registered Address</span>
+            <span class="text-slate-300">${r.address || '—'}</span>
+          </div>
+          ${conn}
+        `;
+        return c;
+      }
+    });
   </script>
 </body>
 </html>
