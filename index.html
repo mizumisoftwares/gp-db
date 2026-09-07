@@ -1,433 +1,300 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GP Search Engine UI</title>
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --border: #e2e8f0;
-      --code-bg: #0f172a;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 950px;
-      margin: 0 auto;
-    }
-
-    header {
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      margin: 0 0 6px 0;
-      font-size: 1.6rem;
-    }
-
-    .subtitle {
-      color: #64748b;
-      font-size: 0.9rem;
-    }
-
-    .api-config {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 20px;
-      background: #f1f5f9;
-      padding: 12px;
-      border-radius: 8px;
-    }
-
-    .api-config input {
-      flex: 1;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-
-    .tab-btn {
-      padding: 10px 16px;
-      border: none;
-      background: none;
-      font-weight: 600;
-      color: #64748b;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #475569;
-    }
-
-    input, select {
-      padding: 8px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-
-    button.btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    button.btn:hover {
-      background: var(--primary-hover);
-    }
-
-    .batch-item {
-      display: grid;
-      grid-template-columns: 1fr 1fr 120px 40px;
-      gap: 8px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px;
-      cursor: pointer;
-    }
-
-    .status-badge {
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 4px;
-      display: inline-block;
-      margin-bottom: 8px;
-    }
-
-    .status-200 { background: #dcfce7; color: #15803d; }
-    .status-502 { background: #fee2e2; color: #b91c1c; }
-
-    .results-container {
-      background: var(--code-bg);
-      color: #f8fafc;
-      padding: 16px;
-      border-radius: 8px;
-      overflow-x: auto;
-      max-height: 500px;
-    }
-
-    pre {
-      margin: 0;
-      font-family: monospace;
-      font-size: 0.85rem;
-    }
-
-    .hidden {
-      display: none;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ICMR + HITEK Search Console</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
-<div class="container">
-  <header>
-    <h1>GP Search Engine 2.0.0</h1>
-    <div class="subtitle">Data trained on Gram Panchayat public datasets</div>
+  <!-- Navigation Bar -->
+  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-magnifying-glass-chart text-indigo-400 text-2xl"></i>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+          ICMR + HITEK Search
+        </h1>
+      </div>
+      <div id="api-status-badge" class="flex items-center space-x-2 text-xs bg-slate-700 px-3 py-1.5 rounded-full border border-slate-600">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse" id="status-dot"></span>
+        <span id="status-text" class="text-slate-300">Checking API...</span>
+      </div>
+    </div>
   </header>
 
-  <!-- Endpoint Base URL Config -->
-  <div class="api-config">
-    <label for="baseUrl">Base URL:</label>
-    <input type="text" id="baseUrl" value="https://gp-work.onrender.com">
-    <button class="btn" onclick="checkHealth()">Test /health</button>
-  </div>
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
 
-  <!-- Navigation -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('single')">GET /search</button>
-    <button class="tab-btn" onclick="switchTab('parallel')">POST /search/parallel</button>
-  </div>
-
-  <!-- GET /search -->
-  <div id="singleSearch" class="card">
-    <form onsubmit="handleSingleSearch(event)">
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="sq">Search Query (q) *</label>
-          <input type="text" id="sq" placeholder="e.g., milkopur" required>
+    <!-- Search Box Panel -->
+    <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-xl mb-8">
+      <form id="search-form" class="space-y-4">
+        
+        <!-- Input row -->
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="relative flex-grow">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-search"></i>
+            </div>
+            <input 
+              type="text" 
+              id="query-input" 
+              placeholder="Enter Mobile Number (e.g., 8115749248)..." 
+              required
+              class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-100 placeholder-slate-500 transition"
+            />
+          </div>
+          <button 
+            type="submit" 
+            id="search-btn"
+            class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-8 py-3 rounded-lg transition duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/30"
+          >
+            <span>Search</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
         </div>
-        <div class="form-group">
-          <label for="sfield">Restrict Field</label>
-          <select id="sfield">
-            <option value="">Any</option>
-            <option value="name">name</option>
-            <option value="fathersName">fathersName</option>
-            <option value="phoneNumber">phoneNumber</option>
-            <option value="aadharNumber">aadharNumber</option>
-            <option value="otherNumber">otherNumber</option>
-            <option value="address">address</option>
-            <option value="district">district</option>
-            <option value="pincode">pincode</option>
-            <option value="state">state</option>
-            <option value="town">town</option>
-            <option value="source">source</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="smode">Mode</label>
-          <select id="smode">
-            <option value="contains">contains</option>
-            <option value="exact">exact</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="slimit">Limit (1 - 1000)</label>
-          <input type="number" id="slimit" value="10" min="1" max="1000">
-        </div>
-        <div class="form-group">
-          <label for="ssource">Source Filter</label>
-          <select id="ssource">
-            <option value="">Any</option>
-            <option value="icmr">icmr</option>
-            <option value="hitek">hitek</option>
-            <option value="inddata">inddata</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="spretty">Pretty Print</label>
-          <select id="spretty">
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select>
-        </div>
-      </div>
-      <button type="submit" class="btn">Execute Search</button>
-    </form>
-  </div>
 
-  <!-- POST /search/parallel -->
-  <div id="parallelSearch" class="card hidden">
-    <form onsubmit="handleParallelSearch(event)">
-      <p style="font-size:0.85rem; color:#64748b; margin-top:0;">Runs up to 50 concurrent queries across DuckDB connection workers.</p>
-      
-      <div id="batchContainer"></div>
+        <!-- Controls Row -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-700/50 text-xs text-slate-400">
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center space-x-1.5 cursor-pointer">
+              <span>Mode:</span>
+              <select id="mode-select" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none">
+                <option value="exact">Exact Match</option>
+                <option value="contains" selected>Contains</option>
+              </select>
+            </label>
 
-      <div style="margin-bottom: 16px;">
-        <button type="button" class="btn" style="background:#64748b;" onclick="addBatchRow()">+ Add Query Item</button>
-      </div>
+            <label class="flex items-center space-x-1.5 cursor-pointer">
+              <span>Limit:</span>
+              <select id="limit-select" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+              </select>
+            </label>
+          </div>
 
-      <div class="form-group" style="max-width:200px; margin-bottom:16px;">
-        <label for="plimit">Global Limit</label>
-        <input type="number" id="plimit" value="10" min="1" max="100">
-      </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-emerald-400"><i class="fa-solid fa-shield-halved"></i> Sensitive Identifiers Redacted</span>
+          </div>
+        </div>
 
-      <button type="submit" class="btn">Execute Parallel Search</button>
-    </form>
-  </div>
-
-  <!-- Response Viewer -->
-  <div class="card">
-    <div id="statusBadge"></div>
-    <div class="results-container">
-      <pre id="output">// Results will appear here...</pre>
+      </form>
     </div>
-  </div>
-</div>
 
-<script>
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    if (tab === 'single') {
-      document.getElementById('singleSearch').classList.remove('hidden');
-      document.getElementById('parallelSearch').classList.add('hidden');
-      event.target.classList.add('active');
-    } else {
-      document.getElementById('singleSearch').classList.add('hidden');
-      document.getElementById('parallelSearch').classList.remove('hidden');
-      event.target.classList.add('active');
-      if (document.getElementById('batchContainer').children.length === 0) {
-        addBatchRow();
-      }
-    }
-  }
-
-  function getBaseUrl() {
-    return document.getElementById('baseUrl').value.replace(/\/$/, '');
-  }
-
-  function updateStatus(code, text) {
-    const badge = document.getElementById('statusBadge');
-    if (!code) {
-      badge.innerHTML = '';
-      return;
-    }
-    const isOk = code >= 200 && code < 300;
-    badge.innerHTML = `<span class="status-badge ${isOk ? 'status-200' : 'status-502'}">Status: ${code} ${text}</span>`;
-  }
-
-  async function checkHealth() {
-    const out = document.getElementById('output');
-    out.textContent = "Loading...";
-    updateStatus(null);
-
-    try {
-      const res = await fetch(`${getBaseUrl()}/health`);
-      updateStatus(res.status, res.statusText);
-      const data = await res.json();
-      out.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-      out.textContent = `Network Error: ${err.message}`;
-    }
-  }
-
-  async function handleSingleSearch(e) {
-    e.preventDefault();
-    const out = document.getElementById('output');
-    out.textContent = "Loading query...";
-    updateStatus(null);
-
-    const params = new URLSearchParams();
-    params.append('q', document.getElementById('sq').value);
-
-    const field = document.getElementById('sfield').value;
-    if (field) params.append('field', field);
-
-    params.append('mode', document.getElementById('smode').value);
-    params.append('limit', document.getElementById('slimit').value);
-
-    const source = document.getElementById('ssource').value;
-    if (source) params.append('source', source);
-
-    params.append('pretty', document.getElementById('spretty').value);
-
-    try {
-      const res = await fetch(`${getBaseUrl()}/search?${params.toString()}`);
-      updateStatus(res.status, res.statusText);
+    <!-- Results Section -->
+    <div id="results-container" class="space-y-6 hidden">
       
-      const text = await res.text();
+      <!-- Stats Header -->
+      <div class="flex flex-wrap justify-between items-center bg-slate-800/50 px-4 py-3 rounded-lg border border-slate-700/50">
+        <div class="text-sm">
+          Found <span id="res-count" class="font-bold text-indigo-400">0</span> results for query: 
+          <code id="res-query" class="bg-slate-900 px-2 py-0.5 rounded text-amber-300 font-mono"></code>
+        </div>
+        <button id="toggle-json-btn" class="text-xs text-slate-400 hover:text-slate-200 underline">
+          View Raw JSON Response
+        </button>
+      </div>
+
+      <!-- Raw JSON Display (Hidden by default) -->
+      <div id="raw-json-wrapper" class="hidden">
+        <pre id="raw-json-output" class="bg-slate-950 p-4 rounded-lg text-xs font-mono text-emerald-400 overflow-x-auto border border-slate-800 max-h-96"></pre>
+      </div>
+
+      <!-- Result Cards Container -->
+      <div id="cards-grid" class="grid grid-cols-1 gap-4"></div>
+
+    </div>
+
+    <!-- Empty / Initial State -->
+    <div id="empty-state" class="text-center py-16 bg-slate-800/30 rounded-xl border border-dashed border-slate-700">
+      <i class="fa-solid fa-database text-4xl text-slate-600 mb-3"></i>
+      <h3 class="text-base font-semibold text-slate-400">Query 2.5 Billion Index Records</h3>
+      <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        Search mobile numbers via remote parquet index querying.
+      </p>
+    </div>
+
+    <!-- Loading Spinner State -->
+    <div id="loading-state" class="hidden text-center py-16">
+      <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+      <p class="text-sm text-slate-400 mt-4">Querying remote index dataset...</p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-500">
+    <span>ICMR + HITEK Remote Index Console &bull; Connected to Render API</span>
+  </footer>
+
+  <!-- Frontend Logic -->
+  <script>
+    const API_BASE = "https://gp-work.onrender.com";
+
+    // DOM Elements
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const searchForm = document.getElementById("search-form");
+    const queryInput = document.getElementById("query-input");
+    const modeSelect = document.getElementById("mode-select");
+    const limitSelect = document.getElementById("limit-select");
+    const resultsContainer = document.getElementById("results-container");
+    const emptyState = document.getElementById("empty-state");
+    const loadingState = document.getElementById("loading-state");
+    const resCount = document.getElementById("res-count");
+    const resQuery = document.getElementById("res-query");
+    const cardsGrid = document.getElementById("cards-grid");
+    const rawJsonWrapper = document.getElementById("raw-json-wrapper");
+    const rawJsonOutput = document.getElementById("raw-json-output");
+    const toggleJsonBtn = document.getElementById("toggle-json-btn");
+
+    // Check API Health on load
+    async function checkHealth() {
       try {
-        const json = JSON.parse(text);
-        out.textContent = JSON.stringify(json, null, 2);
-      } catch {
-        out.textContent = text || "(Empty response body)";
+        const res = await fetch(`${API_BASE}/health`);
+        const data = await res.json();
+        if (data.status === "ok") {
+          statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
+          statusText.textContent = "API Operational";
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        statusDot.className = "w-2 h-2 rounded-full bg-rose-500";
+        statusText.textContent = "API Offline / Error";
       }
-    } catch (err) {
-      out.textContent = `Network Error: ${err.message}`;
     }
-  }
+    checkHealth();
 
-  function addBatchRow() {
-    const container = document.getElementById('batchContainer');
-    const row = document.createElement('div');
-    row.className = 'batch-item';
-    row.innerHTML = `
-      <input type="text" placeholder="Value (Required)" class="batch-value" required>
-      <select class="batch-field">
-        <option value="name">name</option>
-        <option value="fathersName">fathersName</option>
-        <option value="phoneNumber">phoneNumber</option>
-        <option value="address">address</option>
-        <option value="district">district</option>
-        <option value="pincode">pincode</option>
-      </select>
-      <select class="batch-mode">
-        <option value="contains">contains</option>
-        <option value="exact">exact</option>
-      </select>
-      <button type="button" class="btn-danger" onclick="this.parentElement.remove()">✕</button>
-    `;
-    container.appendChild(row);
-  }
+    // Toggle Raw JSON
+    toggleJsonBtn.addEventListener("click", () => {
+      rawJsonWrapper.classList.toggle("hidden");
+    });
 
-  async function handleParallelSearch(e) {
-    e.preventDefault();
-    const out = document.getElementById('output');
-    out.textContent = "Loading parallel queries...";
-    updateStatus(null);
+    // Handle Search Submission
+    searchForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const query = queryInput.value.trim();
+      if (!query) return;
 
-    const rows = document.querySelectorAll('.batch-item');
-    const queries = Array.from(rows).map(row => ({
-      value: row.querySelector('.batch-value').value,
-      field: row.querySelector('.batch-field').value,
-      mode: row.querySelector('.batch-mode').value,
-      limit: 10
-    }));
+      const mode = modeSelect.value;
+      const limit = limitSelect.value;
 
-    const body = {
-      queries: queries,
-      limit: parseInt(document.getElementById('plimit').value, 10) || 10
-    };
+      // Show Loading State
+      emptyState.classList.add("hidden");
+      resultsContainer.classList.add("hidden");
+      loadingState.classList.remove("hidden");
 
-    try {
-      const res = await fetch(`${getBaseUrl()}/search/parallel`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      
-      updateStatus(res.status, res.statusText);
-      const text = await res.text();
-      
       try {
-        const json = JSON.parse(text);
-        out.textContent = JSON.stringify(json, null, 2);
-      } catch {
-        out.textContent = text || "(Empty response body)";
-      }
-    } catch (err) {
-      out.textContent = `Network Error: ${err.message}`;
-    }
-  }
-</script>
+        const url = `${API_BASE}/search?mobile=${encodeURIComponent(query)}&mode=${mode}&limit=${limit}&pretty=true`;
+        const res = await fetch(url);
+        const data = await res.json();
 
+        loadingState.classList.add("hidden");
+        resultsContainer.classList.remove("hidden");
+
+        // Render Overview Stats
+        resCount.textContent = data.total || 0;
+        resQuery.textContent = query;
+        rawJsonOutput.textContent = JSON.stringify(data, null, 2);
+
+        // Render Cards
+        cardsGrid.innerHTML = "";
+        if (data.results && data.results.length > 0) {
+          data.results.forEach((record, index) => {
+            cardsGrid.appendChild(createRecordCard(record, index + 1));
+          });
+        } else {
+          cardsGrid.innerHTML = `
+            <div class="bg-slate-800 p-6 rounded-lg text-center text-slate-400">
+              <i class="fa-solid fa-circle-xmark text-slate-500 text-3xl mb-2"></i>
+              <p>No matching records found in database indexes.</p>
+            </div>
+          `;
+        }
+
+      } catch (err) {
+        loadingState.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        alert("Failed to execute search query. Please verify connection to server.");
+      }
+    });
+
+    // Render HTML Card for Record
+    function createRecordCard(row, num) {
+      const card = document.createElement("div");
+      card.className = "bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-md hover:border-slate-600 transition";
+
+      // Connected Numbers List
+      let connectedHTML = "";
+      if (row.connected_numbers && row.connected_numbers.length > 0) {
+        const badges = row.connected_numbers.map(c => `
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">
+            ${c.field}: ${c.value}
+          </span>
+        `).join("");
+        connectedHTML = `<div class="mt-3 pt-3 border-t border-slate-700/60 flex flex-wrap gap-2 items-center">
+          <span class="text-xs text-slate-400 font-semibold">Connected:</span>
+          ${badges}
+        </div>`;
+      }
+
+      card.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="bg-slate-700 text-slate-300 text-xs font-bold px-2.5 py-1 rounded-md">#${num}</span>
+            <h4 class="font-bold text-lg text-slate-100">${row.name || 'N/A'}</h4>
+          </div>
+          <span class="text-xs bg-slate-900 text-slate-400 px-2 py-1 rounded border border-slate-700 font-mono">
+            Source: ${row.source || 'Unknown'}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+          <div>
+            <span class="text-slate-500 block">Father's Name</span>
+            <span class="text-slate-200 font-medium">${row.fathersName || '—'}</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Phone Number</span>
+            <span class="text-slate-200 font-medium">${row.phoneNumber || '—'}</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Aadhaar Number</span>
+            <span class="text-amber-400 font-medium">${row.aadharNumber || '[Redacted]'}</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Other Number</span>
+            <span class="text-slate-200 font-medium">${row.otherNumber || '—'}</span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Location</span>
+            <span class="text-slate-200 font-medium">
+              ${[row.town, row.district, row.state].filter(Boolean).join(', ') || '—'}
+            </span>
+          </div>
+          <div>
+            <span class="text-slate-500 block">Pincode</span>
+            <span class="text-slate-200 font-medium">${row.pincode || '—'}</span>
+          </div>
+        </div>
+
+        <div class="mt-3 text-xs">
+          <span class="text-slate-500 block">Address</span>
+          <span class="text-slate-300">${row.address || '—'}</span>
+        </div>
+
+        ${connectedHTML}
+      `;
+
+      return card;
+    }
+  </script>
 </body>
 </html>
