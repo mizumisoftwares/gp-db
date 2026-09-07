@@ -1,0 +1,18 @@
+# Core frameworks
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+
+gradio==4.8.0
+
+# Database
+duckdb==0.9.2
+
+# Data validation
+pydantic==2.5.0
+
+# HTTP client (optional)
+httpx==0.25.1
+
+# Utilities
+python-multipart==0.0.6
